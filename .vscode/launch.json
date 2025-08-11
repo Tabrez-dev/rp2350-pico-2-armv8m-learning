@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Cortex Debug (External)",
+            "type": "cortex-debug",
+            "executable": "${workspaceFolder}/Blinky_Pico2_dual_core_nosdk/Output/arm_baremetal_pico2_dual_core_nosdk.elf",
+            "request": "launch",
+            "servertype": "external",
+            "gdbTarget": "localhost:3333",
+            "svdFile": "C:\\Users\\tabre\\Documents\\Pico-v1.5.1\\pico-sdk\\src\\rp2350\\hardware_regs\\RP2350.svd",
+            "showDevDebugOutput": "vscode",
+            "runToEntryPoint": "main",
+            "postAttachCommands": [
+                "monitor reset halt",
+                "load"
+            ]
+        }
+    ]
+}
+
+
