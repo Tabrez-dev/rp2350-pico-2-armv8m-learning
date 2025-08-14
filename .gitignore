@@ -4,3 +4,6 @@
 # ignore Visual Studio's user-specific files
 /.vs/
 *.user
+
+launch.json
+settings.json
