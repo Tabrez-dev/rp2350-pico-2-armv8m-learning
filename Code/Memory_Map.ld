@@ -34,6 +34,8 @@ MEMORY
 {
   FLASH(rx)   : ORIGIN = 0x10000000, LENGTH = 32M
   RAM(rwx)    : ORIGIN = 0x20000000, LENGTH = 512K
+  SRAM4 (rwx): ORIGIN = 0x20040000, LENGTH = 64K    /* Add this line */
+
 }
 
 /******************************************************************************************
@@ -41,6 +43,12 @@ MEMORY
 ******************************************************************************************/
 SECTIONS
 {
+  .sram4 (NOLOAD) : {
+    *(.sram4)
+    . = ALIGN(8192);  /* Ensure ETM buffer alignment */
+  } > SRAM4
+  
+  
   /* Program code */
   .program : ALIGN(4)
   {

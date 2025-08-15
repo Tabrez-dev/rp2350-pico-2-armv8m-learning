@@ -215,7 +215,8 @@ SRC_FILES := $(SRC_DIR)/Appli/main.c                                         \
              $(SRC_DIR)/Startup/Core/$(CORE_FAMILY)/image_definition_block.c \
              $(SRC_DIR)/Startup/Core/$(CORE_FAMILY)/boot.s \
              $(SRC_DIR)/Startup/Core/$(CORE_FAMILY)/IntVect.c \
-             $(SRC_DIR)/Startup/Core/$(CORE_FAMILY)/util.s
+             $(SRC_DIR)/Startup/Core/$(CORE_FAMILY)/util.s\
+                $(SRC_DIR)/Appli/etm_demo.c
 
 
 PIO_SRC_FILES :=
