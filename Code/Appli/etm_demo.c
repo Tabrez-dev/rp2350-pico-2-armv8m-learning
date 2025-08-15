@@ -171,7 +171,7 @@ void demo_branch_example(int condition) {
         result = 3;
         LED_GREEN_ON();
         demo_delay(150000);
-        LED_GREEN_OFF();
+        //LED_GREEN_OFF();
     }
     
     // ETM captures: all branch decisions and function calls based on condition
