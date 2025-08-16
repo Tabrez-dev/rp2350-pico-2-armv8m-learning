@@ -7,15 +7,17 @@ cd /d "c:\Users\tabre\Desktop\Pico 2\Blinky_Pico2_dual_core_nosdk"
 REM Create trace directory if it doesn't exist
 if not exist "trace" mkdir "trace"
 
-REM Check if trace file exists in project directory first, then workspace root
-if not exist "trace\etm_trace.bin" (
-    if not exist "..\trace\etm_trace.bin" (
-        echo Error: etm_trace.bin not found in trace folder
+REM Always copy fresh trace file from workspace root (GDB saves there)
+if exist "..\trace\etm_trace.bin" (
+    echo Copying fresh trace file from workspace root...
+    copy "..\trace\etm_trace.bin" "trace\etm_trace.bin"
+) else (
+    if not exist "trace\etm_trace.bin" (
+        echo Error: etm_trace.bin not found in either location
         echo Please run etm_save first to capture trace data
         exit /b 1
     ) else (
-        echo Found trace file in workspace root, copying to project directory...
-        copy "..\trace\etm_trace.bin" "trace\etm_trace.bin"
+        echo Using existing trace file in project directory...
     )
 )
 

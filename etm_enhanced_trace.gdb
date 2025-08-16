@@ -67,6 +67,8 @@ end
 # Ultra-simple 2-command workflow
 define etm_start
     dont-repeat
+    # Clear old trace files from both locations to ensure fresh capture
+    shell rm -f trace/etm_trace.bin trace/etm_ptm2human.txt trace/etm_ptm2human_annotated.txt ../trace/etm_trace.bin 2>/dev/null || del /Q trace\etm_trace.bin trace\etm_ptm2human.txt trace\etm_ptm2human_annotated.txt ..\trace\etm_trace.bin 2>nul || echo "Clearing old traces..."
     source C:/Users/tabre/Desktop/Pico 2/Blinky_Pico2_dual_core_nosdk/etm-scripts/trace.gdb
     trc_setup 0x20040000 32768 12 0 1 1 0
     trc_start 
