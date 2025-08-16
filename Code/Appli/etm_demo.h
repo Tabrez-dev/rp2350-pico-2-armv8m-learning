@@ -26,9 +26,9 @@
 //=============================================================================
 
 // ETM trace buffer - must be in SRAM for DMA access
-// Using 8KB aligned buffer as recommended by czietz/etm-trace-rp2350
-#define ETM_BUFFER_SIZE  8192  // 8KB buffer
-extern uint32 etm_buffer[ETM_BUFFER_SIZE/4] __attribute__((aligned(ETM_BUFFER_SIZE)));
+// Using 32KB aligned buffer to match GDB configuration
+#define ETM_BUFFER_SIZE  32768  // 32KB buffer (8192 words)
+extern uint32 etm_buffer[8192] __attribute__((aligned(8192)));
 
 //=============================================================================
 // Function Prototypes

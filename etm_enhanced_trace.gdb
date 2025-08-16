@@ -1,281 +1,153 @@
-# Enhanced ETM tracing for RP2350 - Educational Version
-# Fixes peripheral access issues and adds debugging capabilities
+# Simplified ETM Function Tracing for RP2350
+# Streamlined for quick function analysis workflow
 
-# Enhanced setup with proper error checking
-define etm_enhanced_setup
-    printf "\n========================================\n"
-    printf "ENHANCED ETM SETUP - RP2350 Pico 2\n"
-    printf "========================================\n\n"
+# Quick setup and start - single command
+define etm_quick_start
+    dont-repeat
     
-    # Step 1: Verify debug connection
-    printf "Step 1: Verifying debug connection...\n"
-    set $dhcsr = {long}0xE000EDF0
-    if ($dhcsr & 0x1) == 0
-        printf "ERROR: Debug not enabled. Enabling now...\n"
-        set {long}0xE000EDF0 = 0xA05F0001
-    else
-        printf "✓ Debug connection verified\n"
-    end
+    printf "Starting ETM trace for function analysis...\n"
     
-    # Step 2: Check and configure power domains
-    printf "\nStep 2: Configuring power domains...\n"
-    set $psm_frce_on = {long}0x40018000
-    set $psm_done = {long}0x4001800C
+    # Load the core trace system
+    source C:/Users/tabre/Desktop/Pico 2/Blinky_Pico2_dual_core_nosdk/etm-scripts/trace.gdb
     
-    printf "Current PSM_FRCE_ON: 0x%08x\n", $psm_frce_on
-    printf "Current PSM_DONE: 0x%08x\n", $psm_done
+    # Standard configuration for function tracing
+    # Buffer: 8KB, DMA channel 12, cycle counting off, branch broadcast on
+    trc_setup 0x20040000 8192 12 0 1 1 0
     
-    # Force all required power domains
-    set {long}0x40018000 = $psm_frce_on | 0x7F
+    # Start tracing
+    trc_start
     
-    # Wait with timeout
-    set $timeout = 10000
-    while (({long}0x4001800C & 0x7F) != 0x7F) && ($timeout > 0)
-        set $timeout = $timeout - 1
-    end
-    
-    if $timeout == 0
-        printf "WARNING: Power domain timeout. Current PSM_DONE: 0x%08x\n", {long}0x4001800C
-    else
-        printf "✓ All power domains ready\n"
-    end
-    
-    # Step 3: Configure resets
-    printf "\nStep 3: Releasing peripheral resets...\n"
-    set $resets_reset = {long}0x40020000
-    set $resets_done = {long}0x40020008
-    
-    printf "Current RESETS_RESET: 0x%08x\n", $resets_reset
-    printf "Current RESETS_DONE: 0x%08x\n", $resets_done
-    
-    # Release required resets
-    set {long}0x40020000 = $resets_reset & ~0x1000104
-    
-    # Wait for reset release
-    set $timeout = 10000
-    while (({long}0x40020008 & 0x1000104) != 0x1000104) && ($timeout > 0)
-        set $timeout = $timeout - 1
-    end
-    
-    if $timeout == 0
-        printf "WARNING: Reset release timeout. Current RESETS_DONE: 0x%08x\n", {long}0x40020008
-    else
-        printf "✓ Peripheral resets released\n"
-    end
-    
-    # Step 4: Enable clocks
-    printf "\nStep 4: Enabling trace clocks...\n"
-    set {long}0x4001003C = {long}0x4001003C | (1<<11)
-    set {long}0x40010048 = {long}0x40010048 | (1<<11)
-    printf "✓ Clocks enabled\n"
-    
-    # Step 5: Unlock ETM registers
-    printf "\nStep 5: Unlocking ETM registers...\n"
-    
-    # Try to read ETM ID register first
-    set $etm_base = 0x50000000
-    printf "Attempting to read ETM base registers...\n"
-    
-    # Check if we can access the ETM region at all
-    set $test_read = 0
-    set $access_ok = 1
-    
-    # Try to read a safe register
-    monitor halt
-    
-    # Unlock sequence
-    printf "Sending ETM unlock sequence...\n"
-    set {long}0x50000FB0 = 0xC5ACCE55
-    
-    # Check lock status
-    set $lock_status = {long}0x50000FB4
-    printf "ETM Lock Status: 0x%08x\n", $lock_status
-    
-    if ($lock_status & 0x1) == 0
-        printf "✓ ETM registers unlocked successfully\n"
-    else
-        printf "WARNING: ETM may still be locked\n"
-    end
-    
-    # Step 6: Test ETM register access
-    printf "\nStep 6: Testing ETM register access...\n"
-    
-    # Try to read ETM configuration register
-    set $etm_config = {long}0x50000010
-    printf "ETM Configuration: 0x%08x\n", $etm_config
-    
-    # Try to write to a safe register (programming control)
-    set $old_prgctrl = {long}0x50000004
-    printf "Current ETM PRGCTRL: 0x%08x\n", $old_prgctrl
-    
-    # Try to write 0 (stop tracing)
-    set {long}0x50000004 = 0
-    set $new_prgctrl = {long}0x50000004
-    printf "After write ETM PRGCTRL: 0x%08x\n", $new_prgctrl
-    
-    if $new_prgctrl == 0
-        printf "✓ ETM register write successful\n"
-        set $etm_accessible = 1
-    else
-        printf "ERROR: ETM register write failed\n"
-        set $etm_accessible = 0
-    end
-    
-    printf "\n========================================\n"
-    if $etm_accessible == 1
-        printf "ETM SETUP COMPLETE - READY FOR TRACING\n"
-    else
-        printf "ETM SETUP FAILED - DEBUGGING REQUIRED\n"
-    end
-    printf "========================================\n\n"
-    
-    # Return status
-    set $etm_setup_status = $etm_accessible
+    printf "✓ ETM tracing active. Continue execution with 'c'\n"
+    printf "  Set breakpoints after functions you want to trace\n"
+    printf "  Use 'etm_quick_save' to save and analyze\n"
 end
 
-# Enhanced trace start with better error handling
-define etm_enhanced_start
-    printf "\n========================================\n"
-    printf "STARTING ENHANCED ETM TRACE\n"
-    printf "========================================\n\n"
+# Quick save with automatic analysis
+define etm_quick_save
+    dont-repeat
     
-    # First run enhanced setup
-    etm_enhanced_setup
+    printf "Saving ETM trace...\n"
     
-    if $etm_setup_status == 0
-        printf "ERROR: Cannot start tracing - setup failed\n"
-        printf "Run 'etm_debug_registers' for detailed analysis\n"
+    # Create trace directory
+    shell mkdir -p trace
+    
+    # Save trace
+    trc_save trace/etm_trace.bin
+    
+    printf "✓ Trace saved to: trace/etm_trace.bin\n"
+    printf "\nTo analyze with Python script:\n"
+    printf "cd trace && python ../../etm_raw_analyzer.py etm_trace.bin --tarmac --viewer\n"
+end
+
+# Function-specific tracing helper
+define trace_function
+    dont-repeat
+    
+    if $argc == 0
+        printf "Usage: trace_function <function_name>\n"
+        printf "Example: trace_function demo_1\n"
         return
     end
     
-    # Load the original trace script
-    printf "Loading czietz trace system...\n"
-    source Blinky_Pico2_dual_core_nosdk/etm-scripts/trace.gdb
+    printf "Setting up trace for function: %s\n", $arg0
     
-    # Configure for our buffer
-    printf "Configuring trace buffer...\n"
-    trc_setup etm_buffer 8192 12 0 1 1 0
+    # Set breakpoint at function entry
+    eval "break %s", $arg0
     
-    # Set trace output directory
-    set $trace_output_dir = "Output/"
-    printf "Trace files will be saved to: %s\n", $trace_output_dir
-    
-    # Start tracing
-    printf "Starting trace capture...\n"
-    trc_start
-    
-    printf "✓ ETM tracing started successfully\n"
-    printf "Continue execution with 'c' command\n"
-    printf "========================================\n\n"
-end
-
-# Debug helper to analyze register access issues
-define etm_debug_registers
-    printf "\n========================================\n"
-    printf "ETM REGISTER ACCESS DEBUGGING\n"
-    printf "========================================\n\n"
-    
-    printf "=== POWER MANAGEMENT ===\n"
-    printf "PSM_FRCE_ON (0x40018000): 0x%08x\n", {long}0x40018000
-    printf "PSM_DONE    (0x4001800C): 0x%08x\n", {long}0x4001800C
-    
-    printf "\n=== RESET CONTROL ===\n"
-    printf "RESETS_RESET (0x40020000): 0x%08x\n", {long}0x40020000
-    printf "RESETS_DONE  (0x40020008): 0x%08x\n", {long}0x40020008
-    
-    printf "\n=== CLOCK CONTROL ===\n"
-    printf "CLK_SYS_CTRL  (0x4001003C): 0x%08x\n", {long}0x4001003C
-    printf "CLK_PERI_CTRL (0x40010048): 0x%08x\n", {long}0x40010048
-    
-    printf "\n=== DEBUG AUTHENTICATION ===\n"
-    printf "DHCSR         (0xE000EDF0): 0x%08x\n", {long}0xE000EDF0
-    printf "DBGAUTHSTATUS (0xE000EFB8): 0x%08x\n", {long}0xE000EFB8
-    
-    printf "\n=== ETM REGISTERS ===\n"
-    printf "ETM Lock Access (0x50000FB0): Attempting write...\n"
-    set {long}0x50000FB0 = 0xC5ACCE55
-    printf "ETM Lock Status (0x50000FB4): 0x%08x\n", {long}0x50000FB4
-    
-    printf "\n=== ETM CORE REGISTERS ===\n"
-    printf "ETM PRGCTRL (0x50000004): 0x%08x\n", {long}0x50000004
-    printf "ETM STATUS  (0x5000000C): 0x%08x\n", {long}0x5000000C
-    printf "ETM CONFIG  (0x50000010): 0x%08x\n", {long}0x50000010
-    
-    printf "\n=== CORESIGHT TRACE ===\n"
-    printf "Coresight Access (0x40060058): 0x%08x\n", {long}0x40060058
-    
-    printf "\n========================================\n"
-    printf "ANALYSIS COMPLETE\n"
-    printf "========================================\n\n"
-end
-
-# Quick test function
-define etm_quick_test
-    printf "Quick ETM accessibility test...\n"
-    
-    # Test basic register read
-    set $test1 = {long}0x50000FB4
-    printf "ETM Lock Status: 0x%08x\n", $test1
-    
-    # Test unlock
-    set {long}0x50000FB0 = 0xC5ACCE55
-    set $test2 = {long}0x50000FB4
-    printf "After unlock: 0x%08x\n", $test2
-    
-    # Test register write
-    set {long}0x50000004 = 0
-    set $test3 = {long}0x50000004
-    printf "PRGCTRL write test: 0x%08x\n", $test3
-    
-    if $test3 == 0
-        printf "✓ ETM registers accessible\n"
-    else
-        printf "✗ ETM register access failed\n"
+    # Start tracing when we hit the breakpoint
+    commands
+        printf "Entered %s - starting trace\n", $arg0
+        etm_quick_start
+        continue
     end
+    
+    printf "✓ Breakpoint set. Run program to start tracing at %s\n", $arg0
 end
 
-printf "\n============================================\n"
-printf "ENHANCED ETM COMMANDS LOADED\n"
-printf "============================================\n"
-printf "etm_enhanced_start    - Complete setup and start\n"
-printf "etm_enhanced_setup    - Setup with error checking\n"
-printf "etm_debug_registers   - Debug register access\n"
-printf "etm_quick_test        - Quick accessibility test\n"
-printf "============================================\n\n"
-printf "RECOMMENDED USAGE:\n"
-printf "1. Set breakpoint: b main\n"
-printf "2. Run program: run\n"
-printf "3. Setup ETM: etm_enhanced_start\n"
-printf "4. Continue: c\n"
-# Enhanced trace save with organized file management
-define etm_save_organized
+# Ultra-simple 2-command workflow
+define etm_start
     dont-repeat
-    
-    printf "\n========================================\n"
-    printf "SAVING ETM TRACE DATA\n"
-    printf "========================================\n\n"
-    
-    # Create trace directory if it doesn't exist
-    shell mkdir -p trace
-    
-    # Save trace using original trc_save function
-    trc_save trace/etm_trace.bin
-    
-    printf "✓ ETM trace saved as: trace/etm_trace.bin\n\n"
-    
-    printf "========================================\n"
-    printf "NEXT STEPS FOR ANALYSIS:\n"
-    printf "========================================\n"
-    printf "1. Navigate to trace directory:\n"
-    printf "   cd trace/\n\n"
-    printf "2. Decode trace to readable format:\n"
-    printf "   ../Tools/ptm2human/ptm2human -e -i etm_trace.bin > etm_trace_readable.txt\n\n"
-    printf "3. View decoded trace:\n"
-    printf "   head -50 etm_trace_readable.txt\n\n"
-    printf "4. Search for demo functions:\n"
-    printf "   grep -i 'demo_function' etm_trace_readable.txt\n"
-    printf "========================================\n\n"
+    source C:/Users/tabre/Desktop/Pico 2/Blinky_Pico2_dual_core_nosdk/etm-scripts/trace.gdb
+    trc_setup 0x20040000 32768 12 0 1 1 0
+    trc_start 
+    printf "✓ Tracing started (circular buffer)\n"
 end
 
-printf "5. Save trace: etm_save_organized\n"
-printf "============================================\n\n"
+define etm_save
+    dont-repeat
+    shell if not exist trace mkdir trace
+    trc_save trace/etm_trace.bin
+    printf "✓ Saved: trace/etm_trace.bin\n"
+end
+
+# Endless (circular buffer) start helper
+define etm_start_endless
+    dont-repeat
+    source C:/Users/tabre/Desktop/Pico 2/Blinky_Pico2_dual_core_nosdk/etm-scripts/trace.gdb
+    # For endless mode, it's recommended to disable the formatter
+    # Buffer: 8KB aligned at 0x20040000, DMA 12, cycle counting off, BB on, formatter off, no timestamp
+    trc_setup 0x20040000 8192 12 0 1 0 0
+    trc_start 1
+    printf "✓ Endless tracing started (circular buffer)\n"
+end
+
+# Decode hint helper (prints command you can run)
+define etm_decode
+    dont-repeat
+    if $argc == 0
+        printf "Usage: etm_decode <binfile>\n"
+        printf "Example: etm_decode trace/etm_trace.bin\n"
+        printf "\nDecoding command:\n"
+        printf "./ptm2human.exe -e -i trace/etm_trace.bin > etm_ptm2human.txt\n"
+        return
+    end
+    printf "Decode with: ./ptm2human.exe -e -i %s > etm_ptm2human.txt\n", $arg0
+end
+
+# Auto-decode and annotate trace
+define etm_analyze
+    dont-repeat
+    printf "🔍 Running ETM trace analysis...\n"
+    # Use dedicated batch script to handle working directory and paths properly
+    shell "c:/Users/tabre/Desktop/Pico 2/Blinky_Pico2_dual_core_nosdk/etm_analyze.bat"
+    printf "✅ Analysis complete!\n"
+    printf "📄 Files created in trace/ folder:\n"
+    printf "   - trace/etm_trace.bin (raw ETM data)\n"
+    printf "   - trace/etm_ptm2human.txt (decoded trace)\n"
+    printf "   - trace/etm_ptm2human_annotated.txt (with C source mapping)\n"
+end
+
+# Complete workflow: save + decode + annotate
+define etm_complete
+    dont-repeat
+    printf "💾 Saving trace...\n"
+    etm_save
+    printf "🔍 Analyzing trace...\n"
+    etm_analyze
+    printf "🎉 Complete ETM analysis finished!\n"
+end
+
+printf "\n===========================================\n"
+printf "SIMPLIFIED ETM FUNCTION TRACING LOADED\n"
+printf "===========================================\n"
+printf "QUICK COMMANDS:\n"
+printf "etm_start           - Start tracing (replaces etm_enhanced_start)\n"
+printf "etm_start_endless   - Start endless circular tracing (8/16/32 KiB buffer)\n"
+printf "etm_save            - Save trace to trace/etm_trace.bin\n"
+printf "etm_decode <file>   - Print decoder command for saved trace\n"
+printf "\nAUTOMATED ANALYSIS:\n"
+printf "etm_analyze         - Decode and annotate saved trace\n"
+printf "etm_complete        - Save + decode + annotate in one command\n"
+printf "\nOPTIONAL HELPERS:\n"
+printf "etm_quick_start     - Start with status messages\n"
+printf "etm_quick_save      - Save with instructions\n"
+printf "trace_function <fn> - Auto-breakpoint and trace function\n"
+printf "\nYOUR WORKFLOW:\n"
+printf "1. b demo_1         # Set breakpoint after function\n"
+printf "2. run              # Start program\n"
+printf "3. etm_start        # Start tracing at breakpoint\n"
+printf "   - or - etm_start_endless   # for circular buffer tracing\n"
+printf "4. c                # Continue to trace function\n"
+printf "5. etm_complete     # Save + decode + annotate automatically\n"
+printf "   - or - etm_save + etm_analyze   # Step by step\n"
+printf "===========================================\n"

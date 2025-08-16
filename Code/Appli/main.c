@@ -281,15 +281,15 @@ int main(void)
   
   // Demo 1: Simple conditional branching
   demo_branch_example(3);   // Takes middle path (calls demo_function_b)
-  BlockingDelay(1000000);   // 1 second pause between demos
+  //BlockingDelay(1000000);   // 1 second pause between demos
   
   // Demo 2: Loop with multiple patterns  
   demo_loop_example();      // 5 iterations with different call patterns
-  BlockingDelay(1000000);
+  //BlockingDelay(1000000);   // Disabled for ETM trace capture
   
   // Demo 3: Different conditional path
   demo_branch_example(7);   // Takes first path (calls demo_function_a) 
-  BlockingDelay(1000000);
+  //BlockingDelay(1000000);   // Disabled for ETM trace capture
   
   // Demo 4: Complex nested calls and recursion
   demo_nested_calls();      // Multiple function calls + recursion

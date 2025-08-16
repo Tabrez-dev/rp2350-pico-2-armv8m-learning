@@ -81,7 +81,8 @@ void etm_enable_hardware(void) {
     }
 
     // 10. Extended stabilization delay for all subsystems
-    for (volatile int i = 0; i < 50000; i++) {
+    // REDUCED for ETM tracing - was 50000
+    for (volatile int i = 0; i < 100; i++) {
         __asm__("nop");
     }
     
@@ -97,7 +98,7 @@ void etm_enable_hardware(void) {
 
 // ETM buffer in SRAM4 with proper alignment
 __attribute__((aligned(8192))) 
-uint32 etm_buffer[2048] __attribute__((section(".sram4"))) = {0};
+uint32 etm_buffer[8192] __attribute__((section(".sram4"))) = {0};
 
 
 //=============================================================================
@@ -119,7 +120,7 @@ void demo_function_a(void) {
     
     if(x > 0) {
         x = x + 2;
-        demo_delay(50000);  
+        //demo_delay(50000);  // Disabled for ETM trace
     }
     
     for(int i = 0; i < 2; i++) {
@@ -129,7 +130,7 @@ void demo_function_a(void) {
         }
     }
     
-    demo_delay(100000);
+    //demo_delay(100000);  // Disabled for ETM trace
     LED_GREEN_OFF();
     
     // ETM captures: function entry, conditional branches, loop iterations, returns
@@ -140,11 +141,11 @@ void demo_function_b(void) {
     volatile int y = 5;
     
     LED_GREEN_ON();
-    demo_delay(30000);
+    //demo_delay(30000);  // Disabled for ETM trace
     
     while(y > 0) {
         LED_GREEN_TOGGLE();
-        demo_delay(20000);
+        //demo_delay(20000);
         y--;
         
         if(y == 2) {
@@ -170,7 +171,7 @@ void demo_branch_example(int condition) {
     } else {
         result = 3;
         LED_GREEN_ON();
-        demo_delay(150000);
+        //demo_delay(150000);  // Disabled for ETM trace
         //LED_GREEN_OFF();
     }
     
@@ -182,7 +183,7 @@ void demo_loop_example(void) {
     
     for(int i = 0; i < 5; i++) {
         LED_GREEN_ON();
-        demo_delay(100000);
+        //demo_delay(100000);  // Disabled for ETM trace
         
         if(i % 3 == 0) {
             demo_function_a();  // Called on iterations 0, 3
@@ -191,12 +192,12 @@ void demo_loop_example(void) {
         } else {
             // i % 3 == 2: iteration 2
             LED_GREEN_TOGGLE();
-            demo_delay(200000);
+            //demo_delay(200000);  // Disabled for ETM trace
             LED_GREEN_TOGGLE();
         }
         
         LED_GREEN_OFF();
-        demo_delay(50000);
+        //demo_delay(50000);  // Disabled for ETM trace
     }
     
     // ETM captures: loop structure, modulo conditions, function call patterns
@@ -207,7 +208,7 @@ void demo_recursive_function(int depth) {
     volatile int local_var = depth;
     
     LED_GREEN_TOGGLE();
-    demo_delay(30000 * depth);  // Variable delay based on depth
+    //demo_delay(30000 * depth);  // Disabled for ETM trace  // Variable delay based on depth
     
     if(depth > 0) {
         local_var = local_var - 1;
@@ -223,13 +224,13 @@ void demo_nested_calls(void) {
     // Complex call graph for advanced trace analysis
     
     demo_branch_example(1);   // Will take path 3 (condition <= 2)
-    demo_delay(300000);
+    //demo_delay(300000);  // Disabled for ETM trace
     
     demo_branch_example(4);   // Will take path 2 (2 < condition <= 5) 
-    demo_delay(300000);
+    //demo_delay(300000);  // Disabled for ETM trace
     
     demo_branch_example(8);   // Will take path 1 (condition > 5)
-    demo_delay(300000);
+    //demo_delay(300000);  // Disabled for ETM trace
     
     demo_recursive_function(3); // 4 levels of recursion (3,2,1,0)
     
